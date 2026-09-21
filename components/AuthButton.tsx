@@ -1,31 +1,59 @@
 "use client";
 import {useEffect,useState} from "react";
-import {GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut} from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithRedirect,
+  signOut
+} from "firebase/auth";
 import {auth} from "@/lib/firebase";
 
 const provider=new GoogleAuthProvider();
 provider.setCustomParameters({prompt:"select_account"});
+
+function messageForAuthError(err:any){
+  const code=String(err?.code||"");
+  if(code.includes("unauthorized-domain")){
+    return "This Vercel domain is not authorized in Firebase yet.";
+  }
+  if(code.includes("operation-not-allowed")){
+    return "Google sign-in is not enabled in Firebase Authentication yet.";
+  }
+  if(code.includes("network-request-failed")){
+    return "Google sign-in could not reach Firebase. Check your connection and try again.";
+  }
+  if(code.includes("web-storage-unsupported")){
+    return "This browser blocks the storage Google sign-in needs. Open the site in Safari or Chrome and try again.";
+  }
+  return "Google sign-in could not be completed. Open the site in Safari or Chrome and try again.";
+}
 
 export default function AuthButton(){
   const [user,setUser]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
 
-  useEffect(()=>onAuthStateChanged(auth,u=>setUser(u?.email??null)),[]);
+  useEffect(()=>{
+    let alive=true;
+    getRedirectResult(auth)
+      .catch(err=>{if(alive)setError(messageForAuthError(err));})
+      .finally(()=>{if(alive)setBusy(false);});
+    const unsub=onAuthStateChanged(auth,u=>{
+      if(!alive)return;
+      setUser(u?.email??null);
+      if(u)setError("");
+    });
+    return ()=>{alive=false;unsub();};
+  },[]);
 
   async function continueWithGoogle(){
     setBusy(true);
     setError("");
     try{
-      await signInWithPopup(auth,provider);
+      await signInWithRedirect(auth,provider);
     }catch(err:any){
-      const code=String(err?.code||"");
-      if(code.includes("operation-not-allowed")){
-        setError("Google sign-in needs to be enabled in Firebase Authentication.");
-      }else if(!code.includes("popup-closed-by-user")){
-        setError("Google sign-in could not be completed. Please try again.");
-      }
-    }finally{
+      setError(messageForAuthError(err));
       setBusy(false);
     }
   }

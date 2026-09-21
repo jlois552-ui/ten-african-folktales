@@ -6,8 +6,8 @@ const media=[
   ["image","/media/lion-tortoise.webp","Crowned lion and tortoise illustration"],
   ["video","/media/book-preview.mp4","10 African Folktales preview video"],
   ["image","/media/etsy-hardcover-1.jpg","Hardcover listing"],
-  ["image","/media/walmart-paperback.jpg","Paperback listing"],
-  ["image","/media/etsy-hardcover-2.jpg","Hardcover listing detail"]
+  ["image","/media/tales-overview.jpg","Overview of the ten African folk tales"],
+  ["image","/media/literary-treasure.jpg","Ten African Folk Tales literary treasure poster"]
 ] as const;
 
 export default function Gallery(){
