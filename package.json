@@ -1,6 +1,24 @@
 {
-  "name":"ten-african-folktales","version":"1.0.0","private":true,
-  "scripts":{"dev":"next dev","build":"next build","start":"next start","postinstall":"node scripts/extract-assets.mjs"},
-  "dependencies":{"adm-zip":"0.5.16","firebase":"11.4.0","next":"15.2.4","react":"19.0.0","react-dom":"19.0.0"},
-  "devDependencies":{"@types/node":"22.13.10","@types/react":"19.0.10","@types/react-dom":"19.0.4","typescript":"5.8.2"}
+  "name":"ten-african-folktales",
+  "version":"1.0.0",
+  "private":true,
+  "scripts":{
+    "dev":"next dev",
+    "build":"next build",
+    "start":"next start",
+    "postinstall":"node scripts/extract-assets.mjs"
+  },
+  "dependencies":{
+    "adm-zip":"0.5.16",
+    "firebase":"11.4.0",
+    "next":"15.5.18",
+    "react":"19.0.6",
+    "react-dom":"19.0.6"
+  },
+  "devDependencies":{
+    "@types/node":"22.13.10",
+    "@types/react":"19.0.10",
+    "@types/react-dom":"19.0.4",
+    "typescript":"5.8.2"
+  }
 }
