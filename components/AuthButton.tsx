@@ -1,5 +1,42 @@
 "use client";
-import {FormEvent,useEffect,useState} from "react";
-import {createUserWithEmailAndPassword,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "firebase/auth";
+import {useEffect,useState} from "react";
+import {GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut} from "firebase/auth";
 import {auth} from "@/lib/firebase";
-export default function AuthButton(){const[open,setOpen]=useState(false),[signup,setSignup]=useState(false),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[msg,setMsg]=useState(""),[user,setUser]=useState<string|null>(null);useEffect(()=>onAuthStateChanged(auth,u=>setUser(u?.email??null)),[]);async function submit(e:FormEvent){e.preventDefault();setMsg("");try{signup?await createUserWithEmailAndPassword(auth,email,password):await signInWithEmailAndPassword(auth,email,password);setOpen(false)}catch(err:any){setMsg(String(err?.code||"").includes("operation-not-allowed")?"Enable Email/Password in Firebase Authentication.":"Could not complete sign-in. Please check your details.");}}if(user)return <button className="navAuth" onClick={()=>signOut(auth)}>Sign out</button>;return <><button className="navAuth" onClick={()=>setOpen(true)}>Sign in</button>{open&&<div className="backdrop" onMouseDown={()=>setOpen(false)}><div className="modal" onMouseDown={e=>e.stopPropagation()}><button className="close" onClick={()=>setOpen(false)}>×</button><span className="eyebrow">Reader account</span><h2>{signup?"Create an account":"Welcome back"}</h2><form onSubmit={submit}><input type="email" placeholder="Email" required value={email} onChange={e=>setEmail(e.target.value)}/><input type="password" placeholder="Password" minLength={6} required value={password} onChange={e=>setPassword(e.target.value)}/>{msg&&<p className="error">{msg}</p>}<button className="primary" type="submit">{signup?"Create account":"Sign in"}</button></form><button className="switch" onClick={()=>setSignup(!signup)}>{signup?"Already have an account? Sign in":"New here? Create an account"}</button></div></div>}</>}
+
+const provider=new GoogleAuthProvider();
+provider.setCustomParameters({prompt:"select_account"});
+
+export default function AuthButton(){
+  const [user,setUser]=useState<string|null>(null);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+
+  useEffect(()=>onAuthStateChanged(auth,u=>setUser(u?.email??null)),[]);
+
+  async function continueWithGoogle(){
+    setBusy(true);
+    setError("");
+    try{
+      await signInWithPopup(auth,provider);
+    }catch(err:any){
+      const code=String(err?.code||"");
+      if(code.includes("operation-not-allowed")){
+        setError("Google sign-in needs to be enabled in Firebase Authentication.");
+      }else if(!code.includes("popup-closed-by-user")){
+        setError("Google sign-in could not be completed. Please try again.");
+      }
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  if(user)return <button className="navAuth" onClick={()=>signOut(auth)}>Sign out</button>;
+
+  return <div className="googleAuthWrap">
+    <button className="navAuth googleAuth" onClick={continueWithGoogle} disabled={busy}>
+      <span className="googleMark" aria-hidden="true">G</span>
+      {busy?"Opening Google…":"Continue with Google"}
+    </button>
+    {error&&<span className="authError" role="alert">{error}</span>}
+  </div>
+}
